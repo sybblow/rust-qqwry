@@ -64,27 +64,20 @@ impl QQWryData {
         let mut h = (idx_last - idx_first) / 7;
         let mut l = 0;
 
-        println!("Header Info: {}, {}, {}", idx_first, idx_last, h);
-
         while l <= h {
              let m = (l + h) / 2;
-             println!("m = {} loop", m);
              let subcache = &self.cache[(idx_first + m*7) as usize..];
              if ip_addr < read_u32(&subcache) {
                  h = m - 1;
-                 println!("update h = {}", h);
              } else {
                  if ip_addr > read_u32(&self.cache[read_u24(&subcache[4..]) as usize..]) {
                      l = m + 1;
-                     println!("update l = {}", l);
                  } else {
                      idx_found = idx_first + m * 7;
                      break;
                  }
              }
         }
-
-        println!("Found: {}", idx_found);
 
         let subcache = &self.cache[(idx_found + 4) as usize ..];
         let record_offset = read_u24(subcache) as usize;
