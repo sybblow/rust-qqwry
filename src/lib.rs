@@ -1,35 +1,13 @@
 extern crate encoding;
 
-use std::net::{Ipv4Addr, AddrParseError};
-use std::str::FromStr;
+use std::net::Ipv4Addr;
 use std::fs::File;
 use std::path::Path;
 use std::io::Read;
 use std::mem;
-// use std::fmt::{Debug, Display, self};
 
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::GBK;
-use std::iter::Enumerate;
-
-#[derive(Debug)]
-pub struct IpInfo {
-    sip: Ipv4Addr,
-    eip: Ipv4Addr,
-    country: String,
-    area: String,
-}
-
-impl IpInfo {
-    pub fn new(sip: &str, eip: &str, country: &str, area: &str) -> Result<IpInfo, AddrParseError> {
-        Ok(IpInfo {
-            sip: try!(Ipv4Addr::from_str(sip)),
-            eip: try!(Ipv4Addr::from_str(eip)),
-            country: country.to_string(),
-            area: area.to_string(),
-        })
-    }
-}
 
 #[derive(Debug)]
 pub struct IpGeoInfo {
@@ -137,7 +115,7 @@ impl QQWryData {
     }
 
     #[inline]
-    pub fn get_len(&self) -> usize {
+    pub fn cache_size(&self) -> usize {
         self.cache.len()
     }
 }
