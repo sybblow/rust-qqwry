@@ -69,20 +69,17 @@ impl QQWryData {
                         subcache = self.jump_by_lookaside(subcache);
                         country = get_gbk_cstring(subcache);
                         subcache = &self.cache[(country_offset + 4)..];
-                        println!("Pos 1");
                     },
                     _ => {
                         country = get_gbk_cstring(subcache);
                         if let Some(cstr) = get_cstring_bytes(subcache) {
                             let len = cstr.len() + 1;
-                            println!("Len {}", len);
                             country = decode_gbk_bytes(cstr);
                             subcache = &subcache[len..];
                         }
                         else {
                             return None;
                         }
-                        println!("Pos 2");
                     }
                 }
             },
@@ -91,7 +88,6 @@ impl QQWryData {
                 country = get_gbk_cstring(subcache);
                 /* Skip 4 bytes ip and 4 bytes country offset */
                 subcache = &self.cache[(record_offset + 8)..];
-                println!("Pos 3");
             },
             _ => {
                 if let Some(cstr) = get_cstring_bytes(subcache) {
@@ -102,25 +98,19 @@ impl QQWryData {
                 else {
                     return None;
                 }
-                println!("Pos 4");
             },
         }
 
         /* Read area information */
-        let flag = read_u8(subcache);
-        println!("Flag: {}", flag);
-        match flag {
+        match read_u8(subcache) {
             0x00 => {
                 area = Some("".to_string());
-                println!("Return None");
             },
             0x01 | 0x02 => {
-                println!("Return by jump");
                 subcache = self.jump_by_lookaside(subcache);
                 area = get_gbk_cstring(subcache);
             },
             _ => {
-                println!("Return just there");
                 area = get_gbk_cstring(subcache);
             },
         }
