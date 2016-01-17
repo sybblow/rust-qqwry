@@ -20,6 +20,7 @@ pub struct QQWryData {
 }
 
 impl QQWryData {
+    /// Constructs a new `QQWryData`.
     pub fn new<P: AsRef<Path>>(path: P) -> std::io::Result<QQWryData> {
         let mut cache: Vec<u8> = Vec::new();
         try!(try!(File::open(path)).read_to_end(&mut cache));
@@ -29,6 +30,7 @@ impl QQWryData {
         })
     }
 
+    /// Query ip address in `QQWryData`
     pub fn query(&self, ip_addr: Ipv4Addr) -> Option<IpGeoInfo> {
         let ip_addr = u32::from(ip_addr);
 
@@ -67,12 +69,12 @@ impl QQWryData {
                 match read_u8(subcache) {
                     0x02 => {
                         subcache = self.jump_by_lookaside(subcache);
-                        country = get_gbk_cstring(subcache);
+                        country = get_gbk_cstr(subcache);
                         subcache = &self.cache[(country_offset + 4)..];
                     },
                     _ => {
-                        country = get_gbk_cstring(subcache);
-                        if let Some(cstr) = get_cstring_bytes(subcache) {
+                        country = get_gbk_cstr(subcache);
+                        if let Some(cstr) = get_cstr_bytes(subcache) {
                             let len = cstr.len() + 1;
                             country = decode_gbk_bytes(cstr);
                             subcache = &subcache[len..];
@@ -85,12 +87,12 @@ impl QQWryData {
             },
             0x02 => {
                 subcache = self.jump_by_lookaside(subcache);
-                country = get_gbk_cstring(subcache);
+                country = get_gbk_cstr(subcache);
                 /* Skip 4 bytes ip and 4 bytes country offset */
                 subcache = &self.cache[(record_offset + 8)..];
             },
             _ => {
-                if let Some(cstr) = get_cstring_bytes(subcache) {
+                if let Some(cstr) = get_cstr_bytes(subcache) {
                     let len = cstr.len() + 1;
                     country = decode_gbk_bytes(cstr);
                     subcache = &subcache[len..];
@@ -108,10 +110,10 @@ impl QQWryData {
             },
             0x01 | 0x02 => {
                 subcache = self.jump_by_lookaside(subcache);
-                area = get_gbk_cstring(subcache);
+                area = get_gbk_cstr(subcache);
             },
             _ => {
-                area = get_gbk_cstring(subcache);
+                area = get_gbk_cstr(subcache);
             },
         }
 
@@ -131,6 +133,7 @@ impl QQWryData {
          &self.cache[read_u24(&subcache[1..]) as usize ..]
     }
 
+    /// Get size of memory cache of `QQWryData`
     #[inline]
     pub fn cache_size(&self) -> usize {
         self.cache.len()
@@ -153,7 +156,7 @@ fn read_u8(buf: &[u8]) -> u32 {
 }
 
 #[inline]
-fn get_cstring_bytes(buf: &[u8]) -> Option<&[u8]> {
+fn get_cstr_bytes(buf: &[u8]) -> Option<&[u8]> {
     buf.iter().position(|x| *x == 0).map(|i| &buf[..i])
 }
 
@@ -163,8 +166,8 @@ fn decode_gbk_bytes(bytes: &[u8]) -> Option<String> {
 }
 
 #[inline]
-fn get_gbk_cstring(buf: &[u8]) -> Option<String> {
-    if let Some(cstr) = get_cstring_bytes(buf) {
+fn get_gbk_cstr(buf: &[u8]) -> Option<String> {
+    if let Some(cstr) = get_cstr_bytes(buf) {
         decode_gbk_bytes(cstr)
     }
     else {
@@ -173,11 +176,19 @@ fn get_gbk_cstring(buf: &[u8]) -> Option<String> {
 }
 
 #[test]
-fn it_works() {
+fn test_read_integer() {
     assert_eq!(read_u24(&[0, 1, 0]), 1<<8);
     assert_eq!(read_u24(&[2, 1, 0]), 258);
     assert_eq!(read_u32(&[0, 1, 0, 1]), (1<<8)+(1<<24));
     assert_eq!(read_u32(&[2, 1, 0, 0]), 258);
-    assert_eq!(get_gbk_cstring(&[0xc4, 0xe3, 0xba, 0xc3, 0x0]), Some("你好".to_string()));
-    assert_eq!(get_gbk_cstring(&[0xc4, 0xe3, 0xba, 0xc3]), None);
+}
+
+#[test]
+fn test_get_cstr() {
+    assert_eq!(get_cstr_bytes(&[b'a', b'b', b'c', b'd', 0x0, 0x1, 0x2, 0x10]), Some(&[b'a', b'b', b'c', b'd'] as &[_]));
+    assert_eq!(get_cstr_bytes(&[b'a', b'b', b'c', b'd', 0x1, 0x2, 0x10]), None);
+
+    assert_eq!(get_gbk_cstr(&[0xc4, 0xe3, 0xba, 0xc3, 0x0]), Some("你好".to_string()));
+    assert_eq!(get_gbk_cstr(&[0xc4, 0xe3, 0xba, 0xc3, 0x0, 0x1, 0x2, 0x10]), Some("你好".to_string()));
+    assert_eq!(get_gbk_cstr(&[0xc4, 0xe3, 0xba, 0xc3]), None);
 }
