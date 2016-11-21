@@ -8,19 +8,17 @@ pub fn main() {
         Ok(qqwry_data) => {
             println!("data file size is {}", qqwry_data.cache_size());
 
-            let ip = Ipv4Addr::from_str("255.82.195.240").unwrap();
-            println!("Query: {}", ip);
-            if let Some(res) = qqwry_data.query(ip) {
-                if res.country == " CZ88.NET" {
-                    println!("保留地址");
-                } else {
+            for ip_s in &["255.82.195.240", "58.83.178.16"] {
+                let ip = Ipv4Addr::from_str(ip_s).unwrap();
+                println!("Query: {}", ip);
+
+                if let Some(res) = qqwry_data.query(ip) {
                     println!("Result: {} | {}", res.country, res.area);
+                } else {
+                    println!("Failed!");
                 }
             }
-            else {
-                println!("Failed!");
-            }
-        },
+        }
         Err(e) => println!("Error: {}", e),
     }
 }

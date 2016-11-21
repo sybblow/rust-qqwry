@@ -9,18 +9,18 @@ pub fn main() {
         Ok(qqwry_data) => {
             println!("data file size is {}", qqwry_data.cache_size());
 
-            for _ in [0; 65536].iter() {
+            for _ in 0..65536 {
                 let mut rng = rand::thread_rng();
                 let ip = Ipv4Addr::from(rng.gen::<u32>());
                 println!("Query: {}", ip);
+
                 if let Some(res) = qqwry_data.query(ip) {
                     println!("Result: {} | {}", res.country, res.area);
-                }
-                else {
+                } else {
                     println!("Failed!");
                 }
             }
-        },
+        }
         Err(e) => println!("Error: {}", e),
     }
 }
