@@ -105,16 +105,15 @@ impl QQWryData {
         while l <= h {
             let m = (l + h) / 2;
             let tmp_range = &self.cache[(idx_first + m * 7) as usize..];
-            if ip_addr < read_u32(&tmp_range) {
+            if ip_addr < read_u32(tmp_range) {
                 h = m - 1;
+            } else if ip_addr > read_u32(&self.cache[read_u24(&tmp_range[4..]) as usize..]) {
+                l = m + 1;
             } else {
-                if ip_addr > read_u32(&self.cache[read_u24(&tmp_range[4..]) as usize..]) {
-                    l = m + 1;
-                } else {
-                    idx_found = idx_first + m * 7;
-                    break;
-                }
+                idx_found = idx_first + m * 7;
+                break;
             }
+
         }
 
         idx_found as usize
@@ -162,7 +161,7 @@ fn get_gbk_cstring(buf: &[u8]) -> Option<String> {
 }
 
 #[cfg(test)]
-mod test_sodium {
+mod test {
     use super::{read_u24, read_u32, get_gbk_cstring};
 
     #[test]
